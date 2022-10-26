@@ -1,23 +1,36 @@
 name: 🎉 Release Binary
 on:
-  create:
-    tags:
-      - v*
-  workflow_dispatch:
+  schedule:
+  - cron: 0 2 * * *
+  
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: debian-latest
     steps:
-      - name: "Check out code"
-        uses: actions/checkout@v3
-        with: 
-          fetch-depth: 0
-      
-      - name: "Set up Go"
-        uses: actions/setup-go@v3
-        with: 
+      - name: Checkout Repo
+        uses: actions/checkout@master
+
+      - name: Setup golang
+        uses: actions/setup-go@v2
+        with:
           go-version: 1.18
+
+      - name: Setup Dependencies
+        run: sudo apt-get install libpcap-dev 
+
+      - name: Setting up ProjectDiscovery tools
+        env:
+          GO111MODULE: on
+        run: |
+          go get -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder
+          go get -v github.com/projectdiscovery/dnsx/cmd/dnsx
+          go get -v github.com/projectdiscovery/naabu/v2/cmd/naabu
+          go get -v github.com/projectdiscovery/httpx/cmd/httpx
+          go get -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei
+          go get -v github.com/projectdiscovery/mapcidr/cmd/mapcidr
+          go get -u github.com/ffuf/ffuf
+        shell: bash
       
       - name: "Create release on GitHub"
         uses: goreleaser/goreleaser-action@v3
